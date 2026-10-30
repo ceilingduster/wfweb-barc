@@ -28,6 +28,8 @@ concurrency:
 
 jobs:
   build:
+    # BARC serves its UI through the reservation gateway, not GitHub Pages.
+    if: github.repository == 'adecarolis/wfweb' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

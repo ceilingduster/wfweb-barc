@@ -7,6 +7,13 @@
     'use strict';
 
     function defaultUrlBuilder() {
+        // BARC-hosted UI connects to its own origin; the Raspberry Pi makes
+        // the outbound station connection. Never expose the Pi to browsers.
+        var station = location.pathname.match(/^\/radio\/([a-z0-9-]+)\//);
+        if (station) {
+            return (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+                location.host + '/ws/radio/' + station[1];
+        }
         if (location.protocol === 'https:') {
             return 'wss://' + location.hostname + ':' + (location.port || '443');
         }
@@ -20,9 +27,15 @@
             opts = opts || {};
             this.urlBuilder = opts.urlBuilder || defaultUrlBuilder;
             this.ws = null;
+            this.barc = /^\/radio\//.test(location.pathname);
+            this.operator = !this.barc;
         }
 
         connect() {
+            if (this.barc) {
+                this.operator = false;
+                this.showBarcStatus('BARC · Connecting to station. Listen-only until a reservation is verified.');
+            }
             if (this.ws) {
                 try { this.ws.close(); } catch (e) { /* ignore */ }
                 this.ws = null;
@@ -32,7 +45,13 @@
             ws.binaryType = 'arraybuffer';
             var self = this;
             ws.onopen    = function ()  { self.dispatchEvent(new Event('open')); };
-            ws.onclose   = function (e) { self.dispatchEvent(new CustomEvent('close', { detail: e })); };
+            ws.onclose   = function (e) {
+                if (self.barc) {
+                    self.operator = false;
+                    self.showBarcStatus('BARC · Station connection closed. Control and transmit are unavailable.');
+                }
+                self.dispatchEvent(new CustomEvent('close', { detail: e }));
+            };
             ws.onerror   = function (e) { self.dispatchEvent(new CustomEvent('error', { detail: e })); };
             ws.onmessage = function (event) {
                 if (event.data instanceof ArrayBuffer) {
@@ -41,12 +60,31 @@
                 }
                 try {
                     var msg = JSON.parse(event.data);
+                    if (msg.type === 'barcPermission' || msg.type === 'barcDenied') {
+                        if (msg.type === 'barcPermission') self.operator = msg.operator === true;
+                        self.showBarcStatus(msg.type === 'barcDenied' ? msg.reason :
+                            self.operator ? 'BARC · Your reservation is active. Radio control enabled.' :
+                            'BARC · Listen only. Radio control requires your active reservation. Book at remote.barc.ca/bookings.');
+                        return;
+                    }
                     self.dispatchEvent(new CustomEvent('message', { detail: msg }));
                 } catch (err) {
                     console.error('WebSocketRigTransport parse error:', err);
                 }
             };
             this.ws = ws;
+        }
+
+        showBarcStatus(text) {
+            var banner = document.getElementById('barc-access-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'barc-access-banner';
+                banner.setAttribute('role', 'status');
+                document.body.prepend(banner);
+            }
+            banner.textContent = text;
+            banner.className = this.operator ? 'barc-operator' : 'barc-listener';
         }
 
         close() {
@@ -61,10 +99,12 @@
         }
 
         sendCommand(obj) {
+            if (this.barc && !this.operator && obj.cmd !== 'getStatus' && obj.cmd !== 'enableAudio') return;
             if (this.isOpen()) this.ws.send(JSON.stringify(obj));
         }
 
         sendAudioFrame(buffer) {
+            if (this.barc && !this.operator) return;
             if (this.isOpen()) this.ws.send(buffer);
         }
     }

@@ -41,3 +41,12 @@ resources/js8-src/.emcache/
 
 # Local agent working notes (never published)
 tasks/
+
+# Private deployment code, credentials, and runtime state stay outside this repo.
+barc/
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm

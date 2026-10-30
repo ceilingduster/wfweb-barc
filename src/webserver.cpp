@@ -1809,6 +1809,9 @@ void webServer::onWsDisconnected()
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (pClient) {
         qInfo() << "Web client disconnected:" << pClient->peerAddress().toString();
+        // BARC: listener disconnects must not reset the operator's shared TX
+        // buffers. Capture ownership before the PTT/mic pointers are cleared.
+        const bool ownedTx = pClient == pttClient || pClient == micActiveClient;
         // A browser that keyed the rig and vanished (phone lost the network,
         // tab killed) must not leave it transmitting until the rig's own
         // time-out timer, if any, fires.
@@ -1834,7 +1837,7 @@ void webServer::onWsDisconnected()
             qInfo() << "Web: Restored DATA MOD OFF setting (client disconnected)";
         }
         // Stop FreeDV/RADE TX drain to prevent ALSA underruns
-        if (freedvTxActive) {
+        if (ownedTx && freedvTxActive) {
             freedvTxBuffer.clear();
             freedvTxActive = false;
             if (freedvTxDrainTimer) freedvTxDrainTimer->stop();
@@ -1847,11 +1850,13 @@ void webServer::onWsDisconnected()
         // Cancel any pending PKT idle-driven unkey.  Clear the flag
         // before any forced ALSA stop so a stray IdleState transition
         // can't re-enter onUsbAudioOutputStateChanged.
-        packetTxAwaitingIdle = false;
-        if (packetTxIdleWatchdog) packetTxIdleWatchdog->stop();
-        if (packetUsbTxDrainTimer) packetUsbTxDrainTimer->stop();
-        packetUsbTxBuffer.clear();
-        packetUsbTxActive = false;
+        if (ownedTx) {
+            packetTxAwaitingIdle = false;
+            if (packetTxIdleWatchdog) packetTxIdleWatchdog->stop();
+            if (packetUsbTxDrainTimer) packetUsbTxDrainTimer->stop();
+            packetUsbTxBuffer.clear();
+            packetUsbTxActive = false;
+        }
         audioClients.remove(pClient);
         wsClients.removeAll(pClient);
         browserCount_ = wsClients.size();
