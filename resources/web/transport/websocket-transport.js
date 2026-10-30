@@ -9,6 +9,11 @@
     function defaultUrlBuilder() {
         // BARC-hosted UI connects to its own origin; the Raspberry Pi makes
         // the outbound station connection. Never expose the Pi to browsers.
+        var node = location.pathname.match(/^\/radio\/([a-z0-9-]+)\/nodes\/([a-z0-9-]+)\//);
+        if (node) {
+            return (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+                location.host + '/ws/radio/' + node[1] + '/' + node[2];
+        }
         var station = location.pathname.match(/^\/radio\/([a-z0-9-]+)\//);
         if (station) {
             return (location.protocol === 'https:' ? 'wss://' : 'ws://') +

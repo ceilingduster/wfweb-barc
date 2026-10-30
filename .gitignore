@@ -50,3 +50,9 @@ barc/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+
+# Remote-node deployment secrets
+*.env
+*.env.*
+!*.env.example
+deploy/node/certs/

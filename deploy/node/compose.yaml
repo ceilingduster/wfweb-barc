@@ -1,0 +1,16 @@
+# Run on the remote Raspberry Pi beside a native wfweb installation.
+services:
+  connector:
+    build:
+      context: ../..
+      dockerfile: deploy/node/Dockerfile
+    restart: unless-stopped
+    env_file: node.env
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./certs:/certs:ro

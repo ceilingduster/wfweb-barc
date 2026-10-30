@@ -1,0 +1,7 @@
+**
+!barc_node/
+!barc_node/**
+!deploy/
+!deploy/node/
+!deploy/node/requirements.txt
+!deploy/node/Dockerfile
