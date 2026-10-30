@@ -56,3 +56,8 @@ barc/
 *.env.*
 !*.env.example
 deploy/node/certs/
+
+# Generated per-device identities must never be committed.
+**/node-identity.json
+**/identity.json
+*.json.lock

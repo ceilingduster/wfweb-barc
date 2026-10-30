@@ -6,6 +6,7 @@ import base64
 import json
 import logging
 import os
+import signal
 import ssl
 import time
 from urllib.parse import urlparse, quote
@@ -24,6 +25,7 @@ class Agent:
         self.token=token
         self.radio=radio
         self.clients={}
+        self.connected=False
         self.http_url=(http_url or radio.replace('wss:','https:',1).replace('ws:','http:',1)).rstrip('/')+'/'
         parsed=urlparse(self.http_url)
         if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -174,6 +176,7 @@ class Agent:
 
     async def run_once(self):
         async with connect(self.hub,additional_headers={'Authorization':'Bearer '+self.token},max_size=524288,max_queue=16,ping_interval=10,ping_timeout=10,close_timeout=1) as hub:
+            self.connected=True
             await hub.send(json.dumps({'type':'hello','wfweb_url':self.http_url}))
             timer=asyncio.create_task(self.watchdog())
             try:
@@ -182,6 +185,7 @@ class Agent:
                         raise ValueError('Invalid gateway message')
                     await self.handle(hub,json.loads(raw))
             finally:
+                self.connected=False
                 timer.cancel()
                 tasks=list(self.http_tasks)
                 for task in tasks:task.cancel()
@@ -200,8 +204,26 @@ class Agent:
             await asyncio.sleep(5)
 
 
+async def main():
+    from .node_identity import NodeIdentity
+    asyncio.get_running_loop().add_signal_handler(signal.SIGTERM,asyncio.current_task().cancel)
+    identity=NodeIdentity.from_environment()
+    while True:
+        try:
+            await asyncio.to_thread(identity.register,os.environ['BARC_WFWEB_URL'])
+            break
+        except Exception as exc:
+            log.warning('Node registration failed (%s); retrying in 5 seconds',type(exc).__name__)
+            await asyncio.sleep(5)
+    agent=Agent(identity.relay_url,identity.token,os.environ['BARC_RADIO_WS'],os.getenv('BARC_RADIO_CA'),os.environ['BARC_WFWEB_URL'])
+    status=asyncio.create_task(identity.heartbeat_loop(lambda:agent.connected))
+    try:await agent.run()
+    finally:
+        status.cancel();await asyncio.gather(status,return_exceptions=True)
+        try:await asyncio.to_thread(identity.heartbeat,'offline')
+        except Exception:pass
+
+
 if __name__=='__main__':
     logging.basicConfig(level=logging.INFO)
-    node=os.environ['BARC_NODE_ID']
-    agent=Agent(os.getenv('BARC_GATEWAY','wss://remote.barc.ca')+'/ws/nodes/'+node,os.environ['BARC_NODE_TOKEN'],os.environ['BARC_RADIO_WS'],os.getenv('BARC_RADIO_CA'),os.environ['BARC_WFWEB_URL'])
-    asyncio.run(agent.run())
+    asyncio.run(main())

@@ -5,3 +5,7 @@
 !deploy/node/
 !deploy/node/requirements.txt
 !deploy/node/Dockerfile
+
+**/identity.json
+**/node-identity.json
+**/*.json.lock
