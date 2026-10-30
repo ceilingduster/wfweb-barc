@@ -5,7 +5,7 @@ services:
       context: ../..
       dockerfile: deploy/node/Dockerfile
     restart: unless-stopped
-    env_file: node.env
+    env_file: .env
     network_mode: host
     uts: host
     read_only: true
@@ -14,7 +14,6 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     volumes:
-      - ./certs:/certs:ro
       - node-state:/data
 
 volumes:

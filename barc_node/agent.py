@@ -1,5 +1,5 @@
 """Outbound-only Raspberry Pi connector. No browser can reach wfweb directly.
-Run: python -m barc_node.agent. Configure with BARC_* environment variables.
+Run: python -m barc.agent. Configure with BARC_* environment variables.
 """
 import asyncio
 import base64
@@ -9,6 +9,7 @@ import os
 import signal
 import ssl
 import time
+import tempfile
 from urllib.parse import urlparse, quote
 
 import requests
@@ -30,6 +31,15 @@ class Agent:
         parsed=urlparse(self.http_url)
         if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError('Configure a local wfweb HTTP(S) URL without credentials or query parameters')
+        # Compose .env files support quoted multiline PEM values. Requests needs
+        # a filename; keep an owner-only temporary copy alive with this agent.
+        self._ca_file=None
+        if ca and '-----BEGIN CERTIFICATE-----' in ca:
+            ssl.create_default_context(cadata=ca)
+            self._ca_file=tempfile.NamedTemporaryFile(mode='w+',suffix='.crt',prefix='barc-ca-')
+            self._ca_file.write(ca)
+            self._ca_file.flush()
+            ca=self._ca_file.name
         self.ca=ca
         self.http_tasks=set()
         self.ssl=None
@@ -208,14 +218,16 @@ async def main():
     from .node_identity import NodeIdentity
     asyncio.get_running_loop().add_signal_handler(signal.SIGTERM,asyncio.current_task().cancel)
     identity=NodeIdentity.from_environment()
+    http_url=os.getenv('BARC_WFWEB_URL','https://localhost:8080/')
+    radio_url=os.getenv('BARC_RADIO_WS',http_url.replace('https:','wss:',1).replace('http:','ws:',1).rstrip('/'))
     while True:
         try:
-            await asyncio.to_thread(identity.register,os.environ['BARC_WFWEB_URL'])
+            await asyncio.to_thread(identity.register,http_url)
             break
         except Exception as exc:
             log.warning('Node registration failed (%s); retrying in 5 seconds',type(exc).__name__)
             await asyncio.sleep(5)
-    agent=Agent(identity.relay_url,identity.token,os.environ['BARC_RADIO_WS'],os.getenv('BARC_RADIO_CA'),os.environ['BARC_WFWEB_URL'])
+    agent=Agent(identity.relay_url,identity.token,radio_url,os.getenv('BARC_RADIO_CA'),http_url)
     status=asyncio.create_task(identity.heartbeat_loop(lambda:agent.connected))
     try:await agent.run()
     finally:
