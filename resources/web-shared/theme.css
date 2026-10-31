@@ -403,16 +403,22 @@ body.barc-relay #radio { flex: 1 1 0; min-height: 0; height: auto; }
 body.barc-relay #powerBtn:disabled, body.barc-relay #powerOnBtn:disabled, body.barc-relay #lanConnBtn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
 
 #barc-listening-screen { display: none; }
-body.barc-listening #radio { visibility: hidden; pointer-events: none; }
+body.barc-listening #radio { pointer-events: none; max-width: none; grid-template-rows: 80px 20px minmax(0, 1fr); }
+body.barc-listening #radio > :not(#meterFreqRow):not(#scopeInfoBar):not(#scopeArea) { display: none !important; }
+body.barc-listening #meterFreqRow { grid-row: 1; }
+body.barc-listening #scopeInfoBar { grid-row: 2; }
+body.barc-listening #scopeArea { grid-row: 3; }
+body.barc-listening #scopeArea > :not(#spectrumCanvas):not(#waterfallCanvas):not(#spanEdgeLeft):not(#spanEdgeRight) { display: none !important; }
+body.barc-listening #spectrumCanvas, body.barc-listening #waterfallCanvas { display: block !important; }
 body.barc-listening #barc-access-banner,
 body.barc-listening #powerOffOverlay { display: none !important; }
 body.barc-listening #barc-listening-screen {
     position: fixed; inset: 0; z-index: 10000;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 20px; padding: 24px; background: #0a0a0a; color: #fff;
+    gap: 20px; padding: 24px; background: transparent; color: #fff; pointer-events: none;
     font-family: Arial, sans-serif; text-align: center;
 }
-.barc-listening-title { font-size: clamp(32px, 7vw, 100px); font-weight: 700; letter-spacing: .06em; animation: barc-listening-flash 1.8s ease-in-out infinite; }
+.barc-listening-title { font-size: clamp(32px, 7vw, 100px); font-weight: 700; letter-spacing: .06em; text-shadow: 0 2px 12px #000; animation: barc-listening-flash 1.8s ease-in-out infinite; }
 #barc-listening-screen p { color: #999; font-size: 16px; }
 @keyframes barc-listening-flash { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .barc-listening-title { animation: none; } }
