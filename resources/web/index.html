@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BARC Remote</title>
+<title>Remote Control &amp; Web Interface</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- Shared design tokens + component kit (.wf-*). Source of truth lives at
      resources/web-shared/theme.css; loaded before the inline styles so its
@@ -2974,7 +2974,7 @@ function updateRigTag() {
         el.textContent = label;
         el.title = (rigTagName && rigModelName) ? rigModelName : 'Rig';
     }
-    document.title = label ? label + ' \u2013 BARC Remote' : 'BARC Remote';
+    document.title = 'Remote Control & Web Interface';
 }
 // Rigs that only accept the CI-V power-on command on a connector wfweb may not
 // be using (the IC-7600's [REMOTE] jack — its USB dies in standby).  Server
