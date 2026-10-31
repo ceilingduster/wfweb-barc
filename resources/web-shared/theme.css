@@ -401,3 +401,18 @@ body.barc-relay #radio { flex: 1 1 0; min-height: 0; height: auto; }
 #barc-access-banner.barc-operator { background: #234d3e; border-color: #5f9582; }
 
 body.barc-relay #powerBtn:disabled, body.barc-relay #powerOnBtn:disabled, body.barc-relay #lanConnBtn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+#barc-listening-screen { display: none; }
+body.barc-listening #radio { visibility: hidden; pointer-events: none; }
+body.barc-listening #barc-access-banner,
+body.barc-listening #powerOffOverlay { display: none !important; }
+body.barc-listening #barc-listening-screen {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; padding: 24px; background: #0a0a0a; color: #fff;
+    font-family: Arial, sans-serif; text-align: center;
+}
+.barc-listening-title { font-size: clamp(32px, 7vw, 100px); font-weight: 700; letter-spacing: .06em; animation: barc-listening-flash 1.8s ease-in-out infinite; }
+#barc-listening-screen p { color: #999; font-size: 16px; }
+@keyframes barc-listening-flash { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .barc-listening-title { animation: none; } }

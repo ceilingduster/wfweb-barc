@@ -36,6 +36,13 @@
             this.operator = !this.barc;
             if (this.barc) {
                 document.body.classList.add('barc-relay');
+                document.addEventListener('keydown', function(event) {
+                    if (document.body.classList.contains('barc-listening') &&
+                        document.getElementById('startupOverlay').style.display === 'none') {
+                        event.stopImmediatePropagation();
+                        event.preventDefault();
+                    }
+                }, true);
                 ['powerBtn','powerOnBtn','lanConnBtn'].forEach(function(id) {
                     var button = document.getElementById(id);
                     if (button) {
@@ -91,6 +98,23 @@
         }
 
         showBarcStatus(text) {
+            document.body.classList.toggle('barc-listening', !this.operator);
+            var radio = document.getElementById('radio');
+            if (radio) radio.inert = !this.operator;
+            var listening = document.getElementById('barc-listening-screen');
+            if (!listening) {
+                listening = document.createElement('section');
+                listening.id = 'barc-listening-screen';
+                var title = document.createElement('div');
+                title.className = 'barc-listening-title';
+                title.textContent = 'LISTENING ...';
+                var detail = document.createElement('p');
+                detail.textContent = 'Audio only';
+                listening.append(title, detail);
+                document.body.append(listening);
+            }
+            listening.querySelector('.barc-listening-title').textContent =
+                this.isOpen() ? 'LISTENING ...' : 'CONNECTING ...';
             var banner = document.getElementById('barc-access-banner');
             if (!banner) {
                 banner = document.createElement('div');
