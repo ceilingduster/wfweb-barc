@@ -32,7 +32,7 @@
 //   • TX: routed through streamDigiAudio (same path FT8 uses)
 // The panel is an overlay peer of the FT8 DIGI Bar; opening one closes
 // the other through closeOtherModes('js8' | 'digi' | ...).
-import { js8Init, synthesize, getSubmode } from '/js8.mjs';
+import { js8Init, synthesize, getSubmode } from './js8.mjs';
 
 // Panel markup — appended to <body> exactly once on first import. Kept
 // as a template literal so the JS that drives the panel and the HTML it

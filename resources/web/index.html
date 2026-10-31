@@ -2289,7 +2289,7 @@ body.ui-locked .softBtn:not(.ptt-btn):not(.key-btn) { opacity: 0.4; }
 </head>
 <body>
 <!-- Startup Overlay -->
-<div id="startupOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 24px;">
+<div id="startupOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%); z-index: 10001; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 24px;">
     <div style="text-align: center; max-width: 640px;">
         <img src="barc-logo.svg" alt="Burlington Amateur Radio Club" width="180" height="113" style="display: block; margin: 0 auto 24px; width: 180px; height: auto; filter: invert(1);">
         <div id="splashTagline" style="font-size: 14px; color: #888; margin-bottom: 28px;">Remote Control &amp; Web Interface</div>
@@ -2974,7 +2974,7 @@ function updateRigTag() {
         el.textContent = label;
         el.title = (rigTagName && rigModelName) ? rigModelName : 'Rig';
     }
-    document.title = label ? label + ' \u2013 wfweb' : 'wfweb';
+    document.title = label ? label + ' \u2013 BARC Remote' : 'BARC Remote';
 }
 // Rigs that only accept the CI-V power-on command on a connector wfweb may not
 // be using (the IC-7600's [REMOTE] jack — its USB dies in standby).  Server
@@ -10638,6 +10638,8 @@ function setDigiWorkedHints(on) {
 // Server build: the logbook lives on the server; fold its call/band summary
 // in once at connect, add QSOs as they are logged, and refetch on edits.
 function loadWorkedIndex() {
+    // BARC deliberately exposes no direct REST/logbook access to the radio.
+    if (transport && transport.barc) { digiWorkedReady = true; return; }
     fetch('/api/v1/logbook/worked').then(function(r) { return r.json(); }).then(function(j) {
         digiWorkedReset();
         var calls = j.calls || {};
@@ -12314,6 +12316,10 @@ function insertQsoSorted(q) {
 // Fetch a page of the server logbook: the newest page (reset) or the next
 // older one after the current cursor.
 function loadLogbookPage(reset) {
+    if (transport && transport.barc) {
+        setDigiLogStatus('Station logbook access is unavailable in the remote console.');
+        return;
+    }
     if (logbookLoading) return;
     if (reset) logbookNext = '';
     else if (!logbookNext) return;
