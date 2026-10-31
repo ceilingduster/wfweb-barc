@@ -398,7 +398,7 @@
 body.barc-relay { display: flex; flex-direction: column; }
 body.barc-relay #radio { flex: 1 1 0; min-height: 0; height: auto; }
 #barc-access-banner { flex: 0 0 auto; position: relative; z-index: 11001; padding: 9px 14px; font: 12px/1.5 Arial, sans-serif; color: #dbe5ee; border-bottom: 1px solid #617383; background: #263746; }
-#barc-access-banner.barc-operator { background: #234d3e; border-color: #5f9582; }
+#barc-access-banner.barc-operator { background: #333; border-color: #555; }
 #barc-access-banner { display: flex; align-items: center; gap: 12px; padding: 5px 14px; min-height: 38px; }
 #barc-access-banner a { display: flex; flex: 0 0 auto; }
 #barc-access-banner img { width: 40px; height: 26px; object-fit: contain; filter: invert(1); }
