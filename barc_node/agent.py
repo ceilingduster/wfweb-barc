@@ -42,6 +42,7 @@ class Agent:
             ca=self._ca_file.name
         self.ca=ca
         self.http_tasks=set()
+        self.http_slots=asyncio.Semaphore(4)
         self.ssl=None
         if radio.startswith('wss:'):
             self.ssl=ssl.create_default_context(cafile=ca)
@@ -56,6 +57,10 @@ class Agent:
         return await connect(self.radio,**options)
 
     async def proxy_http(self, hub, message):
+        async with self.http_slots:
+            await self._proxy_http(hub,message)
+
+    async def _proxy_http(self, hub, message):
         rid=message.get('id')
         path=message.get('path','')
         if not isinstance(path,str) or not safe_asset(path):
@@ -123,7 +128,7 @@ class Agent:
     async def handle(self, hub, message):
         kind=message.get('type');cid=message.get('id')
         if kind=='http':
-            if len(self.http_tasks)>=4:
+            if len(self.http_tasks)>=64:
                 await hub.send(json.dumps({'type':'http_error','id':cid}));return
             task=asyncio.create_task(self.proxy_http(hub,message));self.http_tasks.add(task)
             task.add_done_callback(self.http_tasks.discard)
