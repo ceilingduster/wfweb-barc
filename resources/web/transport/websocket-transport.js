@@ -35,6 +35,8 @@
             this.barc = /^\/radio\//.test(location.pathname);
             this.operator = !this.barc;
             if (this.barc) {
+                this.reservationDeadline = 0;
+                this.countdownInterval = setInterval(() => this.updateCountdown(), 1000);
                 document.body.classList.add('barc-relay');
                 document.addEventListener('keydown', function(event) {
                     if (document.body.classList.contains('barc-listening') &&
@@ -83,9 +85,13 @@
                 try {
                     var msg = JSON.parse(event.data);
                     if (msg.type === 'barcPermission' || msg.type === 'barcDenied') {
-                        if (msg.type === 'barcPermission') self.operator = msg.operator === true;
+                        if (msg.type === 'barcPermission') {
+                            self.operator = msg.operator === true;
+                            self.reservationDeadline = self.operator && Number.isFinite(msg.reservationEnd) && Number.isFinite(msg.serverTime) ?
+                                performance.now() + Math.max(0, msg.reservationEnd-msg.serverTime)*1000 : 0;
+                        }
                         self.showBarcStatus(msg.type === 'barcDenied' ? msg.reason :
-                            self.operator ? 'BARC · Your reservation is active. Radio control enabled.' :
+                            self.operator ? '' :
                             'BARC · Listen only. Radio control requires your active reservation. Book at remote.barc.ca/bookings.');
                         return;
                     }
@@ -119,11 +125,33 @@
             if (!banner) {
                 banner = document.createElement('div');
                 banner.id = 'barc-access-banner';
-                banner.setAttribute('role', 'status');
+                var home = document.createElement('a');
+                home.href = 'https://remote.barc.ca/';
+                home.setAttribute('aria-label', 'BARC Remote home');
+                var logo = document.createElement('img');
+                logo.src = 'barc-logo.svg'; logo.alt = 'BARC';
+                home.append(logo);
+                var status = document.createElement('span');
+                status.id = 'barc-console-status'; status.setAttribute('role', 'status');
+                var timer = document.createElement('span');
+                timer.id = 'barc-reservation-countdown';
+                banner.append(home, status, timer);
                 document.body.prepend(banner);
             }
-            banner.textContent = text;
+            document.getElementById('barc-console-status').textContent = text.replace(/^BARC\s*·\s*/, '');
             banner.className = this.operator ? 'barc-operator' : 'barc-listener';
+            this.updateCountdown();
+        }
+
+        updateCountdown() {
+            var timer = document.getElementById('barc-reservation-countdown');
+            if (!timer) return;
+            timer.hidden = !this.operator || !this.reservationDeadline;
+            if (timer.hidden) return;
+            var seconds = Math.max(0, Math.ceil((this.reservationDeadline-performance.now())/1000));
+            var hours = Math.floor(seconds/3600), minutes = Math.floor(seconds/60)%60;
+            timer.textContent = [hours, minutes, seconds%60].map(n => String(n).padStart(2,'0')).join(':');
+            timer.setAttribute('aria-label', 'Reservation time remaining: '+hours+' hours, '+minutes+' minutes, '+seconds%60+' seconds');
         }
 
         close() {
