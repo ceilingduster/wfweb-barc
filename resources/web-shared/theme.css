@@ -413,12 +413,21 @@ body.barc-listening #spectrumCanvas, body.barc-listening #waterfallCanvas { disp
 body.barc-listening #barc-access-banner,
 body.barc-listening #powerOffOverlay { display: none !important; }
 body.barc-listening #barc-listening-screen {
-    position: fixed; inset: 0; z-index: 10000;
+    order: 1; flex: 1 1 auto; min-width: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 20px; padding: 24px; background: transparent; color: #fff; pointer-events: none;
+    padding: 0 8px; background: transparent; color: #fff; pointer-events: none;
     font-family: Arial, sans-serif; text-align: center;
 }
-.barc-listening-title { font-size: clamp(32px, 7vw, 100px); font-weight: 700; letter-spacing: .06em; text-shadow: 0 2px 12px #000; animation: barc-listening-flash 1.8s ease-in-out infinite; }
-#barc-listening-screen p { color: #999; font-size: 16px; }
+body.barc-listening #freqSection { order: 2; flex: 0 1 30%; min-width: 0; }
+.barc-listening-title { font-size: clamp(12px, 2.1vw, 42px); white-space: nowrap; font-weight: 700; letter-spacing: .06em; text-shadow: 0 2px 12px #000; animation: barc-listening-flash 1.8s ease-in-out infinite; }
+#barc-listening-screen p { display: none; }
+@media (max-width: 600px) {
+    body.barc-listening #radio { grid-template-rows: 110px 20px minmax(0, 1fr); }
+    body.barc-listening #meterFreqRow { flex-wrap: wrap; gap: 0 8px; }
+    body.barc-listening #meterSection { flex: 0 0 45%; }
+    body.barc-listening #freqSection { order: 0; flex: 1 1 45%; }
+    body.barc-listening #barc-listening-screen { flex: 0 0 100%; height: 28px; }
+    .barc-listening-title { font-size: 18px; }
+}
 @keyframes barc-listening-flash { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .barc-listening-title { animation: none; } }

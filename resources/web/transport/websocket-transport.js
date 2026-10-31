@@ -111,7 +111,7 @@
                 var detail = document.createElement('p');
                 detail.textContent = 'Audio only';
                 listening.append(title, detail);
-                document.body.append(listening);
+                document.getElementById('meterFreqRow').append(listening);
             }
             listening.querySelector('.barc-listening-title').textContent =
                 this.isOpen() ? 'LISTENING ...' : 'CONNECTING ...';
