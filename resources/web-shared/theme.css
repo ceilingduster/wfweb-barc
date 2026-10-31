@@ -436,3 +436,8 @@ body.barc-listening #freqSection { order: 2; flex: 0 1 30%; min-width: 0; }
 }
 @keyframes barc-listening-flash { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .barc-listening-title { animation: none; } }
+
+.barc-loading-spinner { width: 44px; height: 44px; margin: 24px auto; border: 3px solid #555; border-top-color: #fff; border-radius: 50%; animation: barc-loading-spin 1s linear infinite; }
+@keyframes barc-loading-spin { to { transform: rotate(360deg); } }
+#startBtn { padding: 14px 28px; border: 1px solid #666; border-radius: 4px; background: #fff; color: #111; font-size: 17px; cursor: pointer; }
+#startBtn[hidden] { display: none; }

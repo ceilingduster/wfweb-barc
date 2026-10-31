@@ -2294,10 +2294,9 @@ body.ui-locked .softBtn:not(.ptt-btn):not(.key-btn) { opacity: 0.4; }
         <img src="barc-logo.svg" alt="Burlington Amateur Radio Club" width="180" height="113" style="display: block; margin: 0 auto 24px; width: 180px; height: auto; filter: invert(1);">
         <div id="splashTagline" style="font-size: 14px; color: #888; margin-bottom: 28px;">Remote Control &amp; Web Interface</div>
 
-        <button id="startBtn" style="padding: 20px 60px; font-size: 24px; font-weight: bold; color: #000; background: linear-gradient(135deg, #0aa 0%, #088 100%); border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 170, 170, 0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 170, 170, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 170, 170, 0.4)';">
-            CLICK TO START
-        </button>
-        <div id="splashHint" style="margin-top: 20px; font-size: 12px; color: #666;">Enable RX Audio</div>
+        <div class="barc-loading-spinner" aria-hidden="true"></div>
+        <button id="startBtn" type="button" hidden>Enable audio</button>
+        <div id="splashHint" role="status" style="margin-top: 20px; font-size: 14px; color: #aaa;">Connecting to station…</div>
         <div id="splashError"  style="margin-top: 16px; min-height: 18px; font-size: 12px; color: #f88;"></div>
 
 
@@ -3451,6 +3450,8 @@ function populateDigiBandSel() {
 // TRANSPORT
 // ============================================================
 function onTransportOpen() {
+    audioStartPending = true;
+    updateAudioSplash();
     document.getElementById('connDot').classList.add('connected');
     document.getElementById('connDot').title = 'Connected';
     if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
@@ -3463,6 +3464,9 @@ function onTransportOpen() {
 }
 
 function onTransportClose() {
+    splashAudioReceived = false;
+    document.getElementById('startupOverlay').style.display = 'flex';
+    document.getElementById('splashHint').textContent = 'Reconnecting to station…';
     dropPttLatch();
     document.getElementById('connDot').classList.remove('connected');
     document.getElementById('connDot').title = 'Disconnected';
@@ -7604,6 +7608,7 @@ function createRxAudioCtx() {
     ctx.onstatechange = function() {
         console.log('[Audio] RX AudioContext ' + ctx.state);
         updateWarningVisibility();
+        updateAudioSplash();
     };
     var p = ctx.resume();
     if (p && p.catch) p.catch(function() {});
@@ -7635,7 +7640,22 @@ function onAudioWarningClick() {
 // The splash can be clicked before the first status says the rig has audio.
 // The click still creates the context (it needs the gesture); the rest of
 // startAudio() runs when audio turns out to be available.
-var audioStartPending = false;
+var audioStartPending = true;
+var splashAudioReceived = false;
+function updateAudioSplash() {
+    var overlay = document.getElementById('startupOverlay');
+    if (!overlay || overlay.style.display === 'none') return;
+    var running = audioCtx && audioCtx.state === 'running';
+    if (splashAudioReceived && running) {
+        overlay.style.display = 'none';
+        return;
+    }
+    var blocked = audioCtx && audioCtx.state === 'suspended';
+    document.getElementById('startBtn').hidden = !blocked;
+    document.getElementById('splashHint').textContent = blocked ?
+        'Your browser needs a click to enable sound.' : audioAvailable ?
+        'Waiting for station audio…' : 'Connecting to station audio…';
+}
 function startPendingAudio() {
     if (audioStartPending && !audioEnabled) startAudio();
 }
@@ -7652,6 +7672,7 @@ function startAudio() {
     audioGainNode.gain.value = rxPlaybackGain();
     audioGainNode.connect(audioCtx.destination);
     audioJbStats = null;
+    updateAudioSplash();
     if (audioCtx.audioWorklet && window.isSecureContext) startWithWorklet();
     else startWithScriptProcessor();
 }
@@ -7972,6 +7993,8 @@ function handleAudioData(buffer) {
     if (!audioEnabled) return;
     if (buffer.byteLength < 8) return;
     if (audioCtx && audioCtx.state !== 'running') resumeRxAudio(false);
+    splashAudioReceived = true;
+    updateAudioSplash();
     var pcmData = new Int16Array(buffer, 6);
     var floatData = new Float32Array(pcmData.length);
     for (var i = 0; i < pcmData.length; i++) floatData[i] = pcmData[i] / 32768.0;
@@ -13264,11 +13287,12 @@ connect();
 // resumed inside a user gesture, so the actual startAudio() call must run
 // from the click handler.
 document.getElementById('startBtn').addEventListener('click', function() {
-    document.getElementById('startupOverlay').style.display = 'none';
-    setTimeout(focusCwInput, 100);
-    if (audioEnabled) return;
-    if (audioAvailable) startAudio();
-    else if (!audioCtx) { audioCtx = createRxAudioCtx(); audioStartPending = true; }
+    if (audioCtx) resumeRxAudio(true);
+    if (!audioEnabled && !audioGainNode) {
+        if (audioAvailable) startAudio();
+        else { if (!audioCtx) audioCtx = createRxAudioCtx(); audioStartPending = true; }
+    }
+    updateAudioSplash();
 });
 
 // Initialize CW Decoder
