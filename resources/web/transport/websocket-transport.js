@@ -34,6 +34,16 @@
             this.ws = null;
             this.barc = /^\/radio\//.test(location.pathname);
             this.operator = !this.barc;
+            if (this.barc) {
+                document.body.classList.add('barc-relay');
+                ['powerBtn','powerOnBtn','lanConnBtn'].forEach(function(id) {
+                    var button = document.getElementById(id);
+                    if (button) {
+                        button.disabled = true;
+                        button.title = 'Power and LAN connection controls are unavailable in BARC Remote.';
+                    }
+                });
+            }
         }
 
         connect() {
@@ -104,7 +114,14 @@
         }
 
         sendCommand(obj) {
-            if (this.barc && !this.operator && obj.cmd !== 'getStatus' && obj.cmd !== 'enableAudio') return;
+            if (this.barc && ['setPower','reconnectLan','disconnectLan'].indexOf(obj.cmd) !== -1) {
+                this.showBarcStatus('BARC · Power and LAN connection controls are unavailable in this console.');
+                return false;
+            }
+            if (this.barc && !this.operator && obj.cmd !== 'getStatus' && obj.cmd !== 'enableAudio') {
+                this.showBarcStatus('BARC · Listen only: tuning and transmit require an active reservation. Check your slot at remote.barc.ca/bookings.');
+                return false;
+            }
             if (this.isOpen()) this.ws.send(JSON.stringify(obj));
         }
 

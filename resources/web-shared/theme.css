@@ -395,5 +395,8 @@
 }
 
 /* BARC reservation status; the gateway enforces permissions independently. */
-#barc-access-banner { position: relative; z-index: 9999; padding: 9px 14px; font: 12px/1.5 Arial, sans-serif; color: #dbe5ee; border-bottom: 1px solid #617383; background: #263746; }
+#barc-access-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 11001; padding: 9px 14px; font: 12px/1.5 Arial, sans-serif; color: #dbe5ee; border-bottom: 1px solid #617383; background: #263746; }
 #barc-access-banner.barc-operator { background: #234d3e; border-color: #5f9582; }
+
+body.barc-relay { padding-top: 42px; }
+body.barc-relay #powerBtn:disabled, body.barc-relay #powerOnBtn:disabled, body.barc-relay #lanConnBtn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
