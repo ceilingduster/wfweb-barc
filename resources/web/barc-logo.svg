@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="264" viewBox="0 0 210 132" role="img" aria-labelledby="barc-logo-title barc-logo-desc">
+  <title id="barc-logo-title">BARC</title>
+  <desc id="barc-logo-desc">Black BARC lettering with the A formed by a radio antenna and five lightning flashes above it.</desc>
+  <g fill="#000" transform="translate(-60 0)">
+    <!-- Lettering is outlined; no fonts or external resources are required. -->
+    <path fill-rule="evenodd" d="M72 71h20c10 0 16 5 16 13 0 5-3 9-8 11 7 2 11 6 11 13 0 9-7 14-18 14H72V71Zm6 6v15h13c7 0 11-3 11-8s-4-7-11-7H78Zm0 21v18h15c8 0 12-3 12-9 0-5-4-9-12-9H78Z"/>
+    <path d="m131 46 7 2-18 74h-7l18-76Zm0 2 7-2 18 76h-8l-17-74Z"/>
+    <path d="M117 113q17-12 35 0l2 8q-20-13-39 0l2-8Z"/>
+    <circle cx="134.5" cy="43" r="8"/>
+    <path fill-rule="evenodd" d="M164 71h21c13 0 20 5 20 14 0 8-5 13-14 14l16 23h-8l-16-22h-12v22h-7V71Zm7 6v17h13c10 0 14-3 14-9s-4-8-14-8h-13Z"/>
+    <path d="m256 84-6 2c-3-7-7-10-15-10-10 0-16 8-16 20 0 13 6 20 16 20 8 0 14-4 16-12l6 2c-3 11-11 16-22 16-14 0-22-10-22-25 0-16 9-26 23-26 10 0 17 4 20 13Z"/>
+    <!-- Radio flashes. -->
+    <path d="m135 6-3 12 3-1-4 15v-10l-2 2 2-12 2 3 2-9Z"/>
+    <path d="m104 20 12 10-2-5 10 13-11-7 2 5-11-16Z"/>
+    <path d="m165 17-10 14v-5l-9 11 7-13v5l12-12Z"/>
+    <path d="m104 62 11-15v5l10-10-8 14v-5l-13 11Z"/>
+    <path d="m168 63-13-11 4 1-13-10 8 13v-5l14 12Z"/>
+  </g>
+</svg>
